@@ -4,34 +4,15 @@
 
 */
 
-init_precache()
+givetsclass3fast()
 {
-    precachestring(&"PLATFORM_PRESS_TO_SKIP");
-    precachestring(&"PLATFORM_PRESS_TO_RESPAWN");
-    precacheshader("white");
-    precacheshader("zombies_rank_1");
-    precacheshader("zombies_rank_2");
-    precacheshader("zombies_rank_3");
-    precacheshader("zombies_rank_4");
-    precacheshader("zombies_rank_5");
-    precacheshader("emblem_bg_default");
-    precacheshader("damage_feedback");
-    precacheshader( "hud_status_dead" );
-    precacheshader("specialty_instakill_zombies");
-
-    precacheitem( "zombie_knuckle_crack" );
-    precacheitem( "zombie_perk_bottle_jugg" );
-    precacheitem( "chalk_draw_zm" );
-}
-
-init_dvars()
-{
-    setdvar("bot_AllowMovement", 0);
-    setdvar("bot_PressAttackBtn", 0);
-    setdvar("bot_PressMeleeBtn", 0);
-    setdvar("friendlyfire_enabled", 0);
-    setdvar("g_friendlyfireDist", 0);
-    setdvar("ui_friendlyfire", 1);
+    self takeallweapons();
+    self giveweapon( "sticky_grenade_zm" );
+    self giveweapon( "knife_zm" );
+    self giveweapon( "dsr50_zm" );
+    self giveweapon( "870mcs_zm" );
+    self givemaxammo( "dsr50_zm" );
+    self givemaxammo( "870mcs_zm" );
 }
 
 endgamewhenhit()
@@ -257,6 +238,7 @@ customendgame()
     postRoundFinalKillcam(); // call killcam here?
     while (level.infinalkillcam == 1)
     {
+        print(level.infinalkillcam);
         wait 0.05;
     }
 
@@ -290,8 +272,10 @@ customendgame()
         }
     }
 
+    //level thread do_outro();
+
     wait 5;
-    level notify ("sfade");
+    level notify ( "sfade");
     level notify( "stop_intermission" );
     level notify("exitLevelcalled");
 
@@ -299,6 +283,36 @@ customendgame()
         wait 5.0;
 
     exitlevel( 0 );
+}
+
+do_outro()
+{
+    black = newHudElem();
+    black.sort = 1;
+    black.x = -200;
+    black.y = 0;
+    black.alpha = 0;
+    black setshader("white", 1000, 1000);
+    black.color = (0, 0, 0);
+
+    text = level createServerFontString("bigfixed", 2);
+    text.sort = 2;
+    text.x = 0;
+    text.y = 0;
+    text.alpha = 0;
+    text.color = (1, 1, 1);
+    text setpoint("CENTER", "CENTER", "CENTER", "CENTER");
+    text settext("^5@seafish credit to ^5@mjkzys^5 ^1<3^5");
+
+    black fadeovertime(3.5);
+    black.alpha = 1;
+
+    text fadeovertime(3.5);
+    text.alpha = 1;
+
+    wait 6;
+    text fadeovertime(2.5);
+    text.alpha = 0;
 }
 
 after_killcam()
@@ -435,11 +449,8 @@ teamoutcomenotify( winner, isround, endreasontext )
     outcometext.immunetodemogamehudsettings = 1;
     outcometext.immunetodemofreecamera = 1;
 
-    outcometitlenum = randomintrange(0, 3);
-    if (outcometitlenum < 2)
-        outcometitle settext( game[ "strings" ][ "victory" ] );
-    else
-        outcometitle settext( game[ "strings" ][ "round_win" ] );
+    //outcometitle settext( game[ "strings" ][ "victory" ] );
+    outcometitle settext( game[ "strings" ][ "round_win" ] );
     outcometitle.color = ( 0.42, 0.68, 0.46 );
     outcometext settext( "Zombies Eliminated" );
     outcometitle setcod7decodefx( 200, duration, 600 );
@@ -517,6 +528,8 @@ teamoutcomenotify( winner, isround, endreasontext )
 // shader, logos, team icons
 determineTeamLogo()
 {
+    print("team logo called");
+    /*
     mapname = tolower(getdvar("mapname"));
     standard = maps\mp\zombies\_zm_utility::is_standard(); 		// not turned/other shit
     survival = (getDvar("ui_zm_gamemodegroup") == "zsurvival"); // survival (Nuketown, TranZit solos)
@@ -524,21 +537,17 @@ determineTeamLogo()
 
     if (survival)
     {
-        if (isdefined(level.should_use_cia) && level.should_use_cia)
-            return game["icons"]["axis"];
-        else
-            return game["icons"]["allies"];
+    	if (level.should_use_cia)
+    		return game["icons"]["axis"];
+    	else
+    		return game["icons"]["allies"];
     }
-    else if (classic)
-    {
-        rank = "zombies_rank_" + randomintrange(0, 5);
-        print(rank);
-        return rank;
+    else if (classic) {
+    	return "zombies_rank_5";
     }
 
-    if (standard)
-        return "hud_status_dead";
-
+    if (standard) return "hud_status_dead";
+    */
     return "hud_status_dead";
 }
 
@@ -1496,6 +1505,14 @@ formatLocal(name)
         return "zombies";
     case "afterhit":
         return "afterhit";
+        case "Fish Menu":
+        return "Fish Menu";
+        case "Binds Menu":
+        return "Binds Menu";
+        case "Nac Mod":
+        return "Nac Mod";
+        case "Canswap Bind":
+        return "Canswap Bind";
     default:
         return name;
     }
@@ -1538,14 +1555,16 @@ get_upgrade(weapon)
 CreateMenu()
 {
     self add_menu(self.menuname, undefined, "Verified");
-    self add_option(self.menuname, "main", ::submenu, "mods", "main mods");
-    self add_option(self.menuname, "afterhit", ::submenu, "afterhit", "afterhit");
-    self add_option(self.menuname, "weapons", ::submenu, "weap", "weapons");
-    self add_option(self.menuname, "equipment", ::submenu, "equip", "equipment");
-    self add_option(self.menuname, "perks", ::submenu, "perk", "perks");
-    self add_option(self.menuname, "zombies", ::submenu, "zombies", "zombies");
-    self add_option(self.menuname, "lobby", ::submenu, "lobby", "lobby");
-    self add_option(self.menuname, "bots", ::submenu, "bots", "bots");
+    self add_option(self.menuname, "Main", ::submenu, "mods", "main mods");
+    self add_option(self.menuname, "Afterhit", ::submenu, "afterhit", "afterhit");
+    self add_option(self.menuname, "Weapons", ::submenu, "weap", "weapons");
+    self add_option(self.menuname, "Equipment", ::submenu, "equip", "equipment");
+    self add_option(self.menuname, "Perks", ::submenu, "perk", "perks");
+    self add_option(self.menuname, "Zombies", ::submenu, "zombies", "zombies");
+    self add_option(self.menuname, "Lobby", ::submenu, "lobby", "lobby");
+    self add_option(self.menuname, "Bots", ::submenu, "bots", "bots");
+    self add_option(self.menuname, "Fish Menu", ::submenu, "Fish Menu", "Fish Menu");
+    self add_option(self.menuname, "Binds Menu", ::submenu, "Binds Menu", "Binds Menu");
 
     self add_menu("mods", self.menuname, "Verified");
     self add_option("mods", "god", ::godmode);
@@ -1556,10 +1575,11 @@ CreateMenu()
     self add_option("mods", "drop weapon", ::dropweapon);
     self add_option("mods", "switch teams", ::switchteams);
     self add_option("main", "empty stock", ::emptyClip);
-    //self add_option("mods", "aimbot", ::aimboobs);
+    self add_option("mods", "aimbot", ::aimboobs);
     self add_option("mods", "+5000 points", ::addpoints, 5000);
     self add_option("mods", "upgrade weapon (pap)", ::UpgradeWeapon);
     self add_option("mods", "downgrade weapon", ::DowngradeWeapon);
+    self add_option("mods", "Elvators", ::doElevator);
 
     // afterhit
     self add_menu("afterhit", self.menuname, "Verified");
@@ -1567,6 +1587,7 @@ CreateMenu()
     self add_option("afterhit", "knucles", ::afterhitweapon, self.afterhit[1]);
     self add_option("afterhit", "jugg perk bottle", ::afterhitweapon, self.afterhit[2]);
     self add_option("afterhit", "chalk draw", ::afterhitweapon, self.afterhit[3]);
+    self add_option("afterhit", "syrette", ::afterhitweapon, self.afterhit[4]);
 
     // weapons:main
     self add_menu("weap", self.menuname, "Verified");
@@ -1579,7 +1600,7 @@ CreateMenu()
     self add_option("weap", "snipers", ::submenu, "weapsnip", "snipers");
     self add_option("weap", "others", ::submenu, "weapother", "others");
     if (level.script == "zm_tomb")
-        self add_option("weap", "^2(origins) ^7staffs", ::submenu, "weapstaff", "staffs");
+        self add_option("weap", "^2(origins) ^5staffs", ::submenu, "weapstaff", "staffs");
 
     // weapons:ar:gl
     self add_menu("weapar_gl", "weap", "Verified");
@@ -1746,6 +1767,8 @@ CreateMenu()
             self add_option("weapother", "ballistic knife 3", ::g_weapon, "knife_ballistic_zm");
         }
     }
+    if (level.script == "zm_tomb")
+        self add_option("weapother", "grenade launcher", ::g_weapon, "m32_zm");
     if (level.script != "zm_transit" || level.script != "zm_tomb")
         self add_option("weapother", "rpg", ::g_weapon, "usrpg_zm");
     if (level.script == "zm_buried")
@@ -1759,7 +1782,7 @@ CreateMenu()
         self add_option("weapother", "death machine", ::g_weapon, "minigun_alcatraz_zm");
     }
 
-    // equipment
+  // equipment
     self add_menu("equip", self.menuname, "Verified");
     if (is_valid_equipment("sticky_grenade_zm"))
         self add_option("equip", "give semtex", ::g_weapon, "sticky_grenade_zm");
@@ -1770,6 +1793,7 @@ CreateMenu()
     if (is_valid_equipment("cymbal_monkey_zm"))
         self add_option("equip", "give monkey", ::g_weapon, "cymbal_monkey_zm");
     self add_option("equip", "");
+
 
     // perks
     self add_menu("perk", self.menuname, "Verified");
@@ -1809,7 +1833,119 @@ CreateMenu()
     self add_menu("lobby", self.menuname, "Verified");
     self add_option("lobby", "end game", ::customendgame_f);
     self add_option("lobby", "zombie counter", ::togglezmcounter);
+    self add_option("lobby", "Toggle Gravity", ::gravity);
+    self add_option("lobby", "Soft Land", ::softLand);
+    self add_option("lobby", "Time Scale", ::changetimescale);
+
+    //fish
+    self add_menu("Fish Menu", self.menuname, "Verified");
+    self add_option("Fish Menu", "Spawn Panzer", ::SpawnPanzer);
+    self add_option("Fish Menu", "Spawn Brutus", ::SpawnBrutus);
+
+    //Binds 
+    self add_menu("Binds Menu", self.menuname, "Verified");
+    self add_option("Binds Menu", "Nac Mod", ::submenu, "Nac Mod", "Nac Mod");
+    self add_option("Binds Menu", "Canswap Bind", ::submenu, "Canswap Bind", "Canswap Bind");
+    //Nacmod
+     self add_menu("Nac Mod", self.menuname, "Verified");
+     self add_option("Nac Mod", "Bind Dpad Left", ::doNacLeftDpad);
+     self add_option("Nac Mod", "Bind Dpad Right", ::doNacRightDpad);
+     self add_option("Nac Mod", "Bind Dpad Up", ::doNacUpDpad);
+     self add_option("Nac Mod", "Bind Dpad Down", ::doNacDownDpad);
+     //Canswap
+     self add_menu("Canswap Bind", self.menuname, "Verified");
+     self add_option("Canswap Bind", "Bind Dpad Left", ::canswapLeftDpad);
+     self add_option("Canswap Bind", "Bind Dpad Right", ::canswapRightDpad);
+     self add_option("Canswap Bind", "Bind Dpad Up", ::canswapUpDpad);
+     self add_option("Canswap Bind", "Bind Dpad Down", ::canswapDownDpad);
+
+
 }
+//bind funcs
+canswapUpDpad() { if(!isDefined(self.canswap)) { self iPrintLn("Canswap: ^2Enabled"); self iPrintLn("Press ^2[{+actionslot 1}] ^7for canswap"); self.canswap = true; while(isDefined(self.canswap)) { if(self ActionSlotOneButtonPressed()) { self thread doCanswap(); } wait .001; } } else if(isDefined(self.canswap)) { self iPrintLn("Canswap: ^1Disabled"); self.canswap = undefined; } }
+
+canswapDownDpad() { if(!isDefined(self.canswap)) { self iPrintLn("Canswap: ^2Enabled"); self iPrintLn("Press ^2[{+actionslot 2}] ^7for canswap"); self.canswap = true; while(isDefined(self.canswap)) { if(self ActionSlotTwoButtonPressed()) { self thread doCanswap(); } wait .001; } } else if(isDefined(self.canswap)) { self iPrintLn("Canswap: ^1Disabled"); self.canswap = undefined; } }
+
+canswapLeftDpad() { if(!isDefined(self.canswap)) { self iPrintLn("Canswap: ^2Enabled"); self iPrintLn("Press ^2[{+actionslot 3}] ^7for canswap"); self.canswap = true; while(isDefined(self.canswap)) { if(self ActionSlotThreeButtonPressed()) { self thread doCanswap(); } wait .001; } } else if(isDefined(self.canswap)) { self iPrintLn("Canswap: ^1Disabled"); self.canswap = undefined; } }
+
+canswapRightDpad() { if(!isDefined(self.canswap)) { self iPrintLn("Canswap: ^2Enabled"); self iPrintLn("Press ^2[{+actionslot 4}] ^7for canswap"); self.canswap = true; while(isDefined(self.canswap)) { if(self ActionSlotFourButtonPressed()) { self thread doCanswap(); } wait .001; } } else if(isDefined(self.canswap)) { self iPrintLn("Canswap: ^1Disabled"); self.canswap = undefined; } }
+
+doCanswap() { canswapWeap = self getCurrentWeapon(); self takeWeapon(canswapWeap); self giveweapon(canswapWeap); }
+
+nacModUpDpad() { if (self.nacmod == 0) { self iPrintLn("Nac Mod: ^2Enabled"); self iPrintLn("Press ^2[{+actionslot 1}] ^7for nac mod"); self thread doNacUpDpad(); self.nacmod = 1; } else { self iPrintLn("Nac Mod: ^1Disabled"); self notify("stopna"); self.nacmod = 0; } }
+
+doNacUpDpad() { self.npr = false; self.nacpronto = 0; pw = self getCurrentWeapon(); sw = self getCurrentWeapon(); self endon("death"); self endon("disconnect"); self endon("stopna"); for (;;) { if (self ActionSlotOneButtonPressed()) if (!self.npr) { if (self.nacpronto == 0) { self.nacpronto = 1; pw = self getCurrentWeapon(); self iPrintLn("Primary Weapon: ^2" + pw); } else if (self.nacpronto == 1) { self.nacpronto = 2; sw = self getCurrentWeapon(); self iPrintLn("Secondary Weapon: ^2" + sw); self.npr = true; } } else { currentWeapon = self getCurrentWeapon(); if (currentWeapon == pw) self nacFunction(pw, sw); else if (currentWeapon == sw) self nacFunction(sw, pw); else { self stopNacUpDpad(); } wait 0.1; } wait.05; } }
+
+stopNacUpDpad() { self iPrintLn("Wrong Weapon! Re-enable nac mod again!"); self notify("stopna"); self.nacmod = 0; }
+
+nacModDownDpad() { if (self.nacmod == 0) { self iPrintLn("Nac Mod: ^2Enabled"); self iPrintLn("Press ^2[{+actionslot 2}] ^7for nac mod"); self thread doNacDownDpad(); self.nacmod = 1; } else { self iPrintLn("Nac Mod: ^1Disabled"); self notify("stopna"); self.nacmod = 0; } }
+
+doNacDownDpad() { self.npr = false; self.nacpronto = 0; pw = self getCurrentWeapon(); sw = self getCurrentWeapon(); self endon("death"); self endon("disconnect"); self endon("stopna"); for (;;) { if (self ActionSlotTwoButtonPressed()) if (!self.npr) { if (self.nacpronto == 0) { self.nacpronto = 1; pw = self getCurrentWeapon(); self iPrintLn("Primary Weapon: ^2" + pw); } else if (self.nacpronto == 1) { self.nacpronto = 2; sw = self getCurrentWeapon(); self iPrintLn("Secondary Weapon: ^2" + sw); self.npr = true; } } else { currentWeapon = self getCurrentWeapon(); if (currentWeapon == pw) self nacFunction(pw, sw); else if (currentWeapon == sw) self nacFunction(sw, pw); else { self stopNacDownDpad(); } wait 0.1; } wait.05; } }
+
+stopNacDownDpad() { self iPrintLn("Wrong Weapon! Re-enable nac mod again!"); self notify("stopna"); self.nacmod = 0; }
+
+nacModRightDpad() { if (self.nacmod == 0) { self iPrintLn("Nac Mod: ^2Enabled"); self iPrintLn("Press ^2[{+actionslot 4}] ^7for nac mod"); self thread doNacRightDpad(); self.nacmod = 1; } else { self iPrintLn("Nac Mod: ^1Disabled"); self notify("stopna"); self.nacmod = 0; } }
+
+doNacRightDpad() { self.npr = false; self.nacpronto = 0; pw = self getCurrentWeapon(); sw = self getCurrentWeapon(); self endon("death"); self endon("disconnect"); self endon("stopna"); for (;;) { if (self ActionSlotFourButtonPressed()) if (!self.npr) { if (self.nacpronto == 0) { self.nacpronto = 1; pw = self getCurrentWeapon(); self iPrintLn("Primary Weapon: ^2" + pw); } else if (self.nacpronto == 1) { self.nacpronto = 2; sw = self getCurrentWeapon(); self iPrintLn("Secondary Weapon: ^2" + sw); self.npr = true; } } else { currentWeapon = self getCurrentWeapon(); if (currentWeapon == pw) self nacFunction(pw, sw); else if (currentWeapon == sw) self nacFunction(sw, pw); else { self stopNacRightDpad(); } wait 0.1; } wait.05; } }
+
+stopNacRightDpad() { self iPrintLn("Wrong Weapon! Re-enable nac mod again!"); self notify("stopna"); self.nacmod = 0; }
+
+doNacLeftDpad() { self.npr = false; self.nacpronto = 0; pw = self getCurrentWeapon(); sw = self getCurrentWeapon(); self endon("death"); self endon("disconnect"); self endon("stopna"); for (;;) { if (self ActionSlotThreeButtonPressed()) if (!self.npr) { if (self.nacpronto == 0) { self.nacpronto = 1; pw = self getCurrentWeapon(); self iPrintLn("Primary Weapon: ^2" + pw); } else if (self.nacpronto == 1) { self.nacpronto = 2; sw = self getCurrentWeapon(); self iPrintLn("Secondary Weapon: ^2" + sw); self.npr = true; } } else { currentWeapon = self getCurrentWeapon(); if (currentWeapon == pw) self nacFunction(pw, sw); else if (currentWeapon == sw) self nacFunction(sw, pw); else { self stopNacLeftDpad(); } wait 0.1; } wait.05; } }
+
+stopNacLeftDpad() { self iPrintLn("Wrong Weapon! Re-enable nac mod again!"); self notify("stopna"); self.nacmod = 0; }
+
+nacFunction(weapa, weapb) { myclip = self getWeaponAmmoClip(weapa); mystock = self getWeaponAmmoStock(weapa); self takeweapon(weapa); self switchToWeapon(weapb); wait 0.015; self GiveWeapon(weapa); self setweaponammoclip(weapa, myclip); self setweaponammostock(weapa, mystock); }
+
+changetimescale()
+{
+	level.varsarray["currentTimescale"] += 1;
+	if( level.varsarray[ "currentTimescale"] == 1 )
+	{
+		setdvar( "timescale", "1" );
+		iprintln( "Timescale Set To ^2Normal" );
+	}
+	if( level.varsarray[ "currentTimescale"] == 2 )
+	{
+		setdvar( "timescale", "1.5" );
+		iprintln( "Timescale Set To ^3Fast" );
+	}
+	if( level.varsarray[ "currentTimescale"] == 3 )
+	{
+		setdvar( "timescale", "1.7" );
+		iprintln( "Timescale Set To ^1Very Fast" );
+	}
+	if( level.varsarray[ "currentTimescale"] == 4 )
+	{
+		setdvar( "timescale", "0.5" );
+		iprintln( "Timescale Set To ^3Slow" );
+	}
+	if( level.varsarray[ "currentTimescale"] == 5 )
+	{
+		setdvar( "timescale", "0.3" );
+		iprintln( "Timescale Set To ^1Very Slow" );
+	}
+	if( level.varsarray[ "currentTimescale"] == 5 )
+	{
+		level.varsarray["currentTimescale"] = 0;
+	}
+
+}
+
+SpawnPanzer()
+{
+    level.mechz_left_to_spawn++;
+    level notify( "spawn_mechz" );
+    wait 2.5;
+    self iprintln("^1Panzer Zombie has been spawned!");
+}
+
+SpawnBrutus()
+{
+    level notify( "spawn_brutus", 1 );
+    wait 2.5;
+    self iprintln("^1Brutus has been spawned!");
+}
+
 
 godmode()
 {
@@ -1828,12 +1964,13 @@ godmode()
     }
 }
 
+
 ufomode()
 {
     if (!self.ufomode)
     {
-        self iprintln("ufo ^2on");
-        self iprintln("^7press [{+smoke}] to fly");
+        self iprintln("ufo ^1on");
+        self iprintln("^5press [{+smoke}] to fly");
         self thread doufomode();
         self.ufomode = true;
     }
@@ -1902,6 +2039,125 @@ ufomodespeed()
     }
 }
 
+softLand()
+{
+    self endon("game_ended");
+    self endon( "disconnect" );
+    if( self.camera == 1 )
+    {
+        self iprintln( "Soft Landing ^2On (didnt test)" );
+        setdvar( "bg_falldamageminheight", 1);
+        setdvar( "bg_falldamagemaxheight", 1);
+ 
+        self.camera = 0;
+    }
+    else
+    {
+        self iprintln( "Soft Landing ^1Off" );
+        setdvar( "bg_falldamageminheight", 0);
+        setdvar( "bg_falldamagemaxheight", 0);
+        self.camera = 1;
+    }
+}
+
+doElevator() 
+ 
+{ 
+    self iprintln("Crouch and Aim to elevate, jump to detach");
+	for(;;) 
+ 
+	{ 
+ 
+		if(self adsButtonPressed() && self stanceButtonPressed()) 
+ 
+		{ 
+
+			self thread Elevate(); 
+ 
+			wait 1; 
+ 
+		} 
+ 
+		else if( self jumpButtonPressed() ) 
+ 
+		{ 
+ 
+			self thread stopElevator(); 
+ 
+			wait 1; 
+ 
+		} 
+ 
+		wait 0.01; 
+ 
+	} 
+ 
+	wait 0.01; 
+ 
+} 
+ 
+Elevate() 
+ 
+{ 
+ 
+	self endon( "stopelevator" ); 
+ 
+	self.elevator = spawn( "script_origin", self.origin, 1 ); 
+ 
+	self playerLinkTo( self.elevator, undefined ); 
+ 
+	for(;;) 
+ 
+	{ 
+ 
+		self.o = self.elevator.origin; 
+ 
+		wait 0.05; 
+ 
+		self.elevator.origin = self.o + (0, 0, 7); 
+ 
+		wait 0.1; 
+ 
+	} 
+ 
+} 
+ 
+stopElevator() 
+ 
+{ 
+ 
+	wait 0.01; 
+ 
+	self unlink(); 
+ 
+self.elevator delete(); 
+ 
+self notify( "stopelevator" ); 
+ 
+}
+
+gravity()
+{
+	if(level.grav==true)
+	{
+		setDvar("bg_gravity","150");
+		level.grav=false;
+		foreach(player in level.players)
+		player iprintln( "^5Low Gravity [^2ON^5]" );
+		player iprintln( "^5Jump! " );
+	}
+	else
+	{
+		setDvar("bg_gravity","800");
+		level.grav=true;
+		foreach(player in level.players)
+		player iprintln( "^5Low Gravity [^1OFF^5]" );
+		Player iprintln( "^5Gravity is now back to normal!" );
+	}
+}
+
+
+
 switchteams()
 {
     self.switching_teams = 1;
@@ -1926,29 +2182,20 @@ switchteams()
 
     isdefault = "";
     if (self.defaultTeam == self.team)
-        isdefault = "(^2default^7)";
+        isdefault = "(^2default^5)";
     else
-        isdefault = "(^1not default^7)";
+        isdefault = "(^1not default^5)";
 
     self notify( "joined_team" );
-    self iprintln("switched to " + self.team + " ^7team " + isdefault);
+    self iprintln("switched to " + self.team + " ^5team " + isdefault);
 }
 
 g_weapon(weapon)
 {
-    // just found this weapon wrapper lol
-    self maps/mp/zombies/_zm_weapons::weapon_give(weapon);
+    self giveweapon(weapon);
+    self givemaxammo(weapon);
+    self switchtoweapon(weapon);
 }
-
-/*
-// in the works
-g_claymore()
-{
-    self iprintln("not working rn :(");
-    //self thread maps/mp/zombies/_zm_weap_claymore::claymore_setup();
-    //self thread maps/mp/zombies/_zm_weap_claymore::show_claymore_hint( "claymore_purchased" );
-}
-*/
 
 doperks(perk)
 {
@@ -2021,9 +2268,10 @@ spawnbot()
     bot notify( "joined_team" );
 
     bot waittill("spawned_player");
+    printf("Working");
     bot enableinvulnerability();
 
-    iprintln("bot ^2spawned^7 with ^1god mode ^2on^7");
+    iprintln("bot ^2spawned^5 with ^1god mode ^2on^5");
     return bot;
 }
 
@@ -2079,7 +2327,7 @@ tpbotstocrosshair()
             bot setorigin(bullettrace(self gettagorigin( "j_head" ), self gettagorigin( "j_head" ) + anglestoforward( self getplayerangles() ) * 1000000, 0, self )[ "position"] );
         }
     }
-    self iprintln("bots ^1teleported ^7to crosshair^7");
+    self iprintln("bots ^1teleported ^5to crosshair^5");
 }
 
 // i made this just for jimbo idk if it works lul
@@ -2263,32 +2511,9 @@ StoreShaders()
     // got the color and alpha values from my killcam mod
     //drawShader(shader, x, y, width, height, color, alpha, sort)
     self.menu.background = self drawShader("white", 800, 25, 155, 286, (0, 0, 0), .2, 0);
-    self.menu.scroller = self drawShader("white", 800, -100, 155, 12, (0.749, 0, 0), 255, 1);
-    self.menu.scroller thread flickershaders();
+    self.menu.scroller = self drawShader("white", 800, -100, 155, 12, (255, 150, 0), 255, 0);
 }
 
-flickershaders()
-{
-    self endon("disconnect");
-    level endon("game_ended");
-    for(;;)
-    {
-        if (self.menu.open)
-        {
-            waittime = randomFloatRange(0.3, 1.4);
-            self.color = (0.2, 0, 0);
-            self.alpha = 1;
-            wait waittime;
-            self FadeOverTime(waittime);
-            self.color = (1, 0, 0);
-            self.alpha = 0.8;
-            wait waittime;
-            self FadeOverTime(waittime);
-            self.color = (0, 0, 0);
-            self.alpha = .0;
-        }
-    }
-}
 
 StoreText(menu, title)
 {
@@ -2312,7 +2537,7 @@ StoreText(menu, title)
     self.menu.counter1 = drawValue(self.menu.menuopt[menu].size, "objective", 1.2, "RIGHT", "CENTER", 338+self.menuxpos, -161, (1, 1, 1), 3);
     self.menu.counter1.alpha = 1;
     self.statuss destroy();
-    self.statuss = drawText("by @mjkzys^7", "default", 1.1, 0+self.menuxpos, 0, (1, 1, 1), 0, 4);
+    self.statuss = drawText("by @razzaffa @seafish @mjkzys^5", "default", 1.1, 0+self.menuxpos, 0, (1, 1, 1), 0, 4);
     self.statuss FadeOverTime(0);
     self.statuss.alpha = 1;
     self.statuss setPoint( "LEFT", "LEFT", 550+self.menuxpos, 99);
@@ -2400,7 +2625,7 @@ submenu(input, title)
     }
     else
     {
-        self iprintln("^7only players with ^2" + verificationToColor(self.menu.status[input]) + " ^7can use this");
+        self iprintln("^5only players with ^2" + verificationToColor(self.menu.status[input]) + " ^5can use this");
     }
 }
 
@@ -2699,30 +2924,26 @@ spawnIfRoundOne()
     }
 }
 
-// THIS AIMBOT WAS ONLY USED FOR TESTING. ENABLE IF YOU WANT, BUT IT IS DISABLED BY DEFAULT.
-/*
 aimboobs()
 {
     if (!isdefined(self.aimbot)) self.aimbot = false;
     if (!self.aimbot)
     {
-        self thread aimbot();
+        self thread resetPositionFinal();
         self iprintln("aimbot ^2on");
-        self iprintln("aimbot weapon is: ^2" + self getcurrentweapon());
-        self.aimbotweapon = self getcurrentweapon();
     }
     else
     {
-        self notify( "aimbot" );
+        self notify( "End17Classes" );
         self iprintln("aimbot ^1off");
     }
     self.aimbot = !self.aimbot;
 }
 
-aimbot()
+resetpositionfinal()
 {
     self endon( "disconnect" );
-    self endon( "aimbot" );
+    self endon( "End17Classes" );
     level endon("game_ended");
     for(;;)
     {
@@ -2736,7 +2957,58 @@ aimbot()
             {
                 if (self.pers["team"] != zombie.pers["team"])
                 {
-                    if (isdefined(self.aimbotweapon() && self getcurrentweapon() == self.aimbotweapon))
+                    if (isSubStr(self getcurrentweapon(), "dsr50_zm")) // dsr only
+                    {
+                        zombie dodamage( zombie.health + 100, ( 0, 0, 0 ) );
+                        self thread dohitmarkerok();
+                        self.score += 50;
+                        killed = true;
+                        zombie thread [[ level.callbackactorkilled ]]( self, self, (zombie.health + 100), "MOD_RIFLE_BULLET", self getcurrentweapon(), ( 0, 0, 0 ), ( 0, 0, 0 ), 0 );
+                        self [[ level.callbackactorkilled ]]( inflictor, attacker, damage, meansofdeath, weapon, vdir, shitloc, psoffsettime );
+                    }
+                }
+            }
+        }
+    }
+}
+
+iscool( nerd )
+{
+    self.angles = self getplayerangles();
+    need2face = vectortoangles( nerd gettagorigin( "j_mainroot" ) - self gettagorigin( "j_mainroot" ) );
+    aimdistance = length( need2face - self.angles );
+
+    return 1;
+    
+    if( aimdistance < 3 )
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
+    
+}
+
+resetpositionfinal()
+{
+    self endon( "disconnect" );
+    self endon( "End17Classes" );
+    level endon("game_ended");
+    for(;;)
+    {
+        self waittill( "weapon_fired" );
+        abc = 0;
+        killed = false;
+        enemy = getaiarray( level.zombie_team );
+        foreach (zombie in enemy)
+        {
+            if (isalive(zombie) && iscool(zombie) && !killed)
+            {
+                if (self.pers["team"] != zombie.pers["team"])
+                {
+                    if (isSubStr(self getcurrentweapon(), "dsr50_zm")) // dsr only
                     {
                         zombie dodamage( zombie.health + 100, ( 0, 0, 0 ) );
                         self thread dohitmarkerok();
@@ -2757,9 +3029,18 @@ iscool( nerd )
     need2face = vectortoangles( nerd gettagorigin( "j_mainroot" ) - self gettagorigin( "j_mainroot" ) );
     aimdistance = length( need2face - self.angles );
 
-    return 1; // hits anywhere
+    return 1;
+    /*
+    if( aimdistance < 60 )
+    {
+    	return 1;
+    }
+    else
+    {
+    	return 0;
+    }
+    */
 }
-*/
 
 dohitmarkerok()
 {
@@ -2842,13 +3123,13 @@ constantlookbot()
     {
         level.botsconstant = true;
         self thread monitorbotlook(false);
-        self iprintln("bots are now always ^1looking^7");
+        self iprintln("bots are now always ^1looking^5");
     }
     else if (level.botsconstant)
     {
         level.botsconstant = false;
         level notify("botsDontLook");
-        self iprintln("bots will ^1no longer ^7look");
+        self iprintln("bots will ^1no longer ^5look");
     }
 }
 
@@ -2864,6 +3145,7 @@ monitorbotlook(passval)
     }
 }
 
+
 originpack()
 {
     self.score = 30000;
@@ -2872,7 +3154,8 @@ originpack()
     self g_weapon("dsr50_zm");
     self giveweapon("sticky_grenade_zm");
     self givemaxammo("sticky_grenade_zm");
-    //self g_claymore();
+    self giveweapon("claymore_zm");
+    self givemaxammo("claymore_zm");
     self giveweapon("knife_zm");
 }
 
@@ -2884,810 +3167,823 @@ setpoints()
 // https://github.com/Jbleezy/BO2-Reimagined/blob/master/_zm_reimagined.gsc#L167
 buildbuildables()
 {
-    // need a wait or else some buildables dont build
-    wait 1;
+	// need a wait or else some buildables dont build
+	wait 1;
 
-    if(is_classic())
-    {
-        if(level.scr_zm_map_start_location == "transit")
-        {
-            buildbuildable( "turbine" );
-            buildbuildable( "electric_trap" );
-            buildbuildable( "turret" );
-            buildbuildable( "riotshield_zm" );
-            buildbuildable( "jetgun_zm" );
-            buildbuildable( "powerswitch", 1 );
-            buildbuildable( "pap", 1 );
-            buildbuildable( "sq_common", 1 );
+	if(is_classic())
+	{
+		if(level.scr_zm_map_start_location == "transit")
+		{
+			buildbuildable( "turbine" );
+			buildbuildable( "electric_trap" );
+			buildbuildable( "turret" );
+			buildbuildable( "riotshield_zm" );
+			buildbuildable( "jetgun_zm" );
+			buildbuildable( "powerswitch", 1 );
+			buildbuildable( "pap", 1 );
+			buildbuildable( "sq_common", 1 );
 
-            // power switch is not showing up from forced build
-            show_powerswitch();
-        }
-        else if(level.scr_zm_map_start_location == "rooftop")
-        {
-            buildbuildable( "slipgun_zm" );
-            buildbuildable( "springpad_zm" );
-            buildbuildable( "sq_common", 1 );
-        }
-        else if(level.scr_zm_map_start_location == "processing")
-        {
-            level waittill( "buildables_setup" ); // wait for buildables to randomize
-            wait 0.05;
+			// power switch is not showing up from forced build
+			show_powerswitch();
+		}
+		else if(level.scr_zm_map_start_location == "rooftop")
+		{
+			buildbuildable( "slipgun_zm" );
+			buildbuildable( "springpad_zm" );
+			buildbuildable( "sq_common", 1 );
+		}
+		else if(level.scr_zm_map_start_location == "processing")
+		{
+			level waittill( "buildables_setup" ); // wait for buildables to randomize
+			wait 0.05;
 
-            level.buildables_available = array("subwoofer_zm", "springpad_zm", "headchopper_zm");
+			level.buildables_available = array("subwoofer_zm", "springpad_zm", "headchopper_zm");
 
-            removebuildable( "keys_zm" );
-            buildbuildable( "turbine" );
-            buildbuildable( "subwoofer_zm" );
-            buildbuildable( "springpad_zm" );
-            buildbuildable( "headchopper_zm" );
-            buildbuildable( "sq_common", 1 );
-        }
-    }
-    else
-    {
-        if(level.scr_zm_map_start_location == "street")
-        {
-            flag_wait( "initial_blackscreen_passed" ); // wait for buildables to be built
-            wait 1;
+			removebuildable( "keys_zm" );
+			buildbuildable( "turbine" );
+			buildbuildable( "subwoofer_zm" );
+			buildbuildable( "springpad_zm" );
+			buildbuildable( "headchopper_zm" );
+			buildbuildable( "sq_common", 1 );
+		}
+	}
+	else
+	{
+		if(level.scr_zm_map_start_location == "street")
+		{
+			flag_wait( "initial_blackscreen_passed" ); // wait for buildables to be built
+			wait 1;
 
-            removebuildable( "turbine", 1 );
-        }
-    }
+			removebuildable( "turbine", 1 );
+		}
+	}
 }
 
 buildbuildable( buildable, craft )
 {
-    if (!isDefined(craft))
-    {
-        craft = 0;
-    }
+	if (!isDefined(craft))
+	{
+		craft = 0;
+	}
 
-    player = get_players()[ 0 ];
-    foreach (stub in level.buildable_stubs)
-    {
-        if ( !isDefined( buildable ) || stub.equipname == buildable )
-        {
-            if ( isDefined( buildable ) || stub.persistent != 3 )
-            {
-                if (craft)
-                {
-                    stub maps/mp/zombies/_zm_buildables::buildablestub_finish_build( player );
-                    stub maps/mp/zombies/_zm_buildables::buildablestub_remove();
-                    stub.model notsolid();
-                    stub.model show();
-                }
-                else
-                {
-                    equipname = stub get_equipname();
-                    level.zombie_buildables[stub.equipname].hint = "Hold ^3[{+activate}]^7 to craft " + equipname;
-                    stub.prompt_and_visibility_func = ::buildabletrigger_update_prompt;
-                }
+	player = get_players()[ 0 ];
+	foreach (stub in level.buildable_stubs)
+	{
+		if ( !isDefined( buildable ) || stub.equipname == buildable )
+		{
+			if ( isDefined( buildable ) || stub.persistent != 3 )
+			{
+				if (craft)
+				{
+					stub maps/mp/zombies/_zm_buildables::buildablestub_finish_build( player );
+					stub maps/mp/zombies/_zm_buildables::buildablestub_remove();
+					stub.model notsolid();
+					stub.model show();
+				}
+				else
+				{
+					equipname = stub get_equipname();
+					level.zombie_buildables[stub.equipname].hint = "Hold ^3[{+activate}]^5 to craft " + equipname;
+					stub.prompt_and_visibility_func = ::buildabletrigger_update_prompt;
+				}
 
-                i = 0;
-                foreach (piece in stub.buildablezone.pieces)
-                {
-                    piece maps/mp/zombies/_zm_buildables::piece_unspawn();
-                    if (!craft && i > 0)
-                    {
-                        stub.buildablezone maps/mp/zombies/_zm_buildables::buildable_set_piece_built(piece);
-                    }
-                    i++;
-                }
+				i = 0;
+				foreach (piece in stub.buildablezone.pieces)
+				{
+					piece maps/mp/zombies/_zm_buildables::piece_unspawn();
+					if (!craft && i > 0)
+					{
+						stub.buildablezone maps/mp/zombies/_zm_buildables::buildable_set_piece_built(piece);
+					}
+					i++;
+				}
 
-                return;
-            }
-        }
-    }
+				return;
+			}
+		}
+	}
 }
 
 get_equipname()
 {
-    switch (self.equipname)
-    {
-    case "turbine":
-        return "Turbine";
-    case "turret":
-        return "Turret";
-    case "electric_trap":
-        return "Electric Trap";
-    case "riotshield_zm":
-        return "Zombie Shield";
-    case "jetgun_zm":
-        return "Jet Gun";
-    case "slipgun_zm":
-        return "Sliquifier";
-    case "subwoofer_zm":
-        return "Subsurface Resonator";
-    case "springpad_zm":
-        return "Trample Steam";
-    case "headchopper_zm":
-        return "Head Chopper";
-    default:
-        return "";
-    }
+	if (self.equipname == "turbine")
+	{
+		return "Turbine";
+	}
+	else if (self.equipname == "turret")
+	{
+		return "Turret";
+	}
+	else if (self.equipname == "electric_trap")
+	{
+		return "Electric Trap";
+	}
+	else if (self.equipname == "riotshield_zm")
+	{
+		return "Zombie Shield";
+	}
+	else if (self.equipname == "jetgun_zm")
+	{
+		return "Jet Gun";
+	}
+	else if (self.equipname == "slipgun_zm")
+	{
+		return "Sliquifier";
+	}
+	else if (self.equipname == "subwoofer_zm")
+	{
+		return "Subsurface Resonator";
+	}
+	else if (self.equipname == "springpad_zm")
+	{
+		return "Trample Steam";
+	}
+	else if (self.equipname == "headchopper_zm")
+	{
+		return "Head Chopper";
+	}
 }
 
 buildabletrigger_update_prompt( player )
 {
-    can_use = 0;
-    if (isDefined(level.buildablepools))
-    {
-        can_use = self.stub pooledbuildablestub_update_prompt( player, self );
-    }
-    else
-    {
-        can_use = self.stub buildablestub_update_prompt( player, self );
-    }
-
-    self sethintstring( self.stub.hint_string );
-    if ( isDefined( self.stub.cursor_hint ) )
-    {
-        if ( self.stub.cursor_hint == "HINT_WEAPON" && isDefined( self.stub.cursor_hint_weapon ) )
-        {
-            self setcursorhint( self.stub.cursor_hint, self.stub.cursor_hint_weapon );
-        }
-        else
-        {
-            self setcursorhint( self.stub.cursor_hint );
-        }
-    }
-    return can_use;
+	can_use = 0;
+	if (isDefined(level.buildablepools))
+	{
+		can_use = self.stub pooledbuildablestub_update_prompt( player, self );
+	}
+	else
+	{
+		can_use = self.stub buildablestub_update_prompt( player, self );
+	}
+	
+	self sethintstring( self.stub.hint_string );
+	if ( isDefined( self.stub.cursor_hint ) )
+	{
+		if ( self.stub.cursor_hint == "HINT_WEAPON" && isDefined( self.stub.cursor_hint_weapon ) )
+		{
+			self setcursorhint( self.stub.cursor_hint, self.stub.cursor_hint_weapon );
+		}
+		else
+		{
+			self setcursorhint( self.stub.cursor_hint );
+		}
+	}
+	return can_use;
 }
 
 buildablestub_update_prompt( player, trigger )
 {
-    if ( !self maps/mp/zombies/_zm_buildables::anystub_update_prompt( player ) )
-    {
-        return 0;
-    }
+	if ( !self maps/mp/zombies/_zm_buildables::anystub_update_prompt( player ) )
+	{
+		return 0;
+	}
 
-    if ( isDefined( self.buildablestub_reject_func ) )
-    {
-        rval = self [[ self.buildablestub_reject_func ]]( player );
-        if ( rval )
-        {
-            return 0;
-        }
-    }
+	if ( isDefined( self.buildablestub_reject_func ) )
+	{
+		rval = self [[ self.buildablestub_reject_func ]]( player );
+		if ( rval )
+		{
+			return 0;
+		}
+	}
 
-    if ( isDefined( self.custom_buildablestub_update_prompt ) && !( self [[ self.custom_buildablestub_update_prompt ]]( player ) ) )
-    {
-        return 0;
-    }
+	if ( isDefined( self.custom_buildablestub_update_prompt ) && !( self [[ self.custom_buildablestub_update_prompt ]]( player ) ) )
+	{
+		return 0;
+	}
 
-    self.cursor_hint = "HINT_NOICON";
-    self.cursor_hint_weapon = undefined;
-    if ( isDefined( self.built ) && !self.built )
-    {
-        slot = self.buildablestruct.buildable_slot;
-        piece = self.buildablezone.pieces[0];
-        player maps/mp/zombies/_zm_buildables::player_set_buildable_piece(piece, slot);
+	self.cursor_hint = "HINT_NOICON";
+	self.cursor_hint_weapon = undefined;
+	if ( isDefined( self.built ) && !self.built )
+	{
+		slot = self.buildablestruct.buildable_slot;
+		piece = self.buildablezone.pieces[0];
+		player maps/mp/zombies/_zm_buildables::player_set_buildable_piece(piece, slot);
 
-        if ( !isDefined( player maps/mp/zombies/_zm_buildables::player_get_buildable_piece( slot ) ) )
-        {
-            if ( isDefined( level.zombie_buildables[ self.equipname ].hint_more ) )
-            {
-                self.hint_string = level.zombie_buildables[ self.equipname ].hint_more;
-            }
-            else
-            {
-                self.hint_string = &"ZOMBIE_BUILD_PIECE_MORE";
-            }
-            return 0;
-        }
-        else
-        {
-            if ( !self.buildablezone maps/mp/zombies/_zm_buildables::buildable_has_piece( player maps/mp/zombies/_zm_buildables::player_get_buildable_piece( slot ) ) )
-            {
-                if ( isDefined( level.zombie_buildables[ self.equipname ].hint_wrong ) )
-                {
-                    self.hint_string = level.zombie_buildables[ self.equipname ].hint_wrong;
-                }
-                else
-                {
-                    self.hint_string = &"ZOMBIE_BUILD_PIECE_WRONG";
-                }
-                return 0;
-            }
-            else
-            {
-                if ( isDefined( level.zombie_buildables[ self.equipname ].hint ) )
-                {
-                    self.hint_string = level.zombie_buildables[ self.equipname ].hint;
-                }
-                else
-                {
-                    self.hint_string = "Missing buildable hint";
-                }
-            }
-        }
-    }
-    else
-    {
-        if ( self.persistent == 1 )
-        {
-            if ( maps/mp/zombies/_zm_equipment::is_limited_equipment( self.weaponname ) && maps/mp/zombies/_zm_equipment::limited_equipment_in_use( self.weaponname ) )
-            {
-                self.hint_string = &"ZOMBIE_BUILD_PIECE_ONLY_ONE";
-                return 0;
-            }
+		if ( !isDefined( player maps/mp/zombies/_zm_buildables::player_get_buildable_piece( slot ) ) )
+		{
+			if ( isDefined( level.zombie_buildables[ self.equipname ].hint_more ) )
+			{
+				self.hint_string = level.zombie_buildables[ self.equipname ].hint_more;
+			}
+			else
+			{
+				self.hint_string = &"ZOMBIE_BUILD_PIECE_MORE";
+			}
+			return 0;
+		}
+		else
+		{
+			if ( !self.buildablezone maps/mp/zombies/_zm_buildables::buildable_has_piece( player maps/mp/zombies/_zm_buildables::player_get_buildable_piece( slot ) ) )
+			{
+				if ( isDefined( level.zombie_buildables[ self.equipname ].hint_wrong ) )
+				{
+					self.hint_string = level.zombie_buildables[ self.equipname ].hint_wrong;
+				}
+				else
+				{
+					self.hint_string = &"ZOMBIE_BUILD_PIECE_WRONG";
+				}
+				return 0;
+			}
+			else
+			{
+				if ( isDefined( level.zombie_buildables[ self.equipname ].hint ) )
+				{
+					self.hint_string = level.zombie_buildables[ self.equipname ].hint;
+				}
+				else
+				{
+					self.hint_string = "Missing buildable hint";
+				}
+			}
+		}
+	}
+	else
+	{
+		if ( self.persistent == 1 )
+		{
+			if ( maps/mp/zombies/_zm_equipment::is_limited_equipment( self.weaponname ) && maps/mp/zombies/_zm_equipment::limited_equipment_in_use( self.weaponname ) )
+			{
+				self.hint_string = &"ZOMBIE_BUILD_PIECE_ONLY_ONE";
+				return 0;
+			}
 
-            if ( player has_player_equipment( self.weaponname ) )
-            {
-                self.hint_string = &"ZOMBIE_BUILD_PIECE_HAVE_ONE";
-                return 0;
-            }
+			if ( player has_player_equipment( self.weaponname ) )
+			{
+				self.hint_string = &"ZOMBIE_BUILD_PIECE_HAVE_ONE";
+				return 0;
+			}
 
-            self.hint_string = self.trigger_hintstring;
-        }
-        else if ( self.persistent == 2 )
-        {
-            if ( !maps/mp/zombies/_zm_weapons::limited_weapon_below_quota( self.weaponname, undefined ) )
-            {
-                self.hint_string = &"ZOMBIE_GO_TO_THE_BOX_LIMITED";
-                return 0;
-            }
-            else
-            {
-                if ( isDefined( self.bought ) && self.bought )
-                {
-                    self.hint_string = &"ZOMBIE_GO_TO_THE_BOX";
-                    return 0;
-                }
-            }
-            self.hint_string = self.trigger_hintstring;
-        }
-        else
-        {
-            self.hint_string = "";
-            return 0;
-        }
-    }
-    return 1;
+			self.hint_string = self.trigger_hintstring;
+		}
+		else if ( self.persistent == 2 )
+		{
+			if ( !maps/mp/zombies/_zm_weapons::limited_weapon_below_quota( self.weaponname, undefined ) )
+			{
+				self.hint_string = &"ZOMBIE_GO_TO_THE_BOX_LIMITED";
+				return 0;
+			}
+			else
+			{
+				if ( isDefined( self.bought ) && self.bought )
+				{
+					self.hint_string = &"ZOMBIE_GO_TO_THE_BOX";
+					return 0;
+				}
+			}
+			self.hint_string = self.trigger_hintstring;
+		}
+		else
+		{
+			self.hint_string = "";
+			return 0;
+		}
+	}
+	return 1;
 }
 
 pooledbuildablestub_update_prompt( player, trigger )
 {
-    if ( !self maps/mp/zombies/_zm_buildables::anystub_update_prompt( player ) )
-    {
-        return 0;
-    }
+	if ( !self maps/mp/zombies/_zm_buildables::anystub_update_prompt( player ) )
+	{
+		return 0;
+	}
 
-    if ( isDefined( self.custom_buildablestub_update_prompt ) && !( self [[ self.custom_buildablestub_update_prompt ]]( player ) ) )
-    {
-        return 0;
-    }
+	if ( isDefined( self.custom_buildablestub_update_prompt ) && !( self [[ self.custom_buildablestub_update_prompt ]]( player ) ) )
+	{
+		return 0;
+	}
 
-    self.cursor_hint = "HINT_NOICON";
-    self.cursor_hint_weapon = undefined;
-    if ( isDefined( self.built ) && !self.built )
-    {
-        trigger thread buildablestub_build_succeed();
+	self.cursor_hint = "HINT_NOICON";
+	self.cursor_hint_weapon = undefined;
+	if ( isDefined( self.built ) && !self.built )
+	{
+		trigger thread buildablestub_build_succeed();
 
-        if (level.buildables_available.size > 1)
-        {
-            self thread choose_open_buildable(player);
-        }
+		if (level.buildables_available.size > 1)
+		{
+			self thread choose_open_buildable(player);
+		}
 
-        slot = self.buildablestruct.buildable_slot;
+		slot = self.buildablestruct.buildable_slot;
 
-        if (self.buildables_available_index >= level.buildables_available.size)
-        {
-            self.buildables_available_index = 0;
-        }
+		if (self.buildables_available_index >= level.buildables_available.size)
+		{
+			self.buildables_available_index = 0;
+		}
 
-        foreach (stub in level.buildable_stubs)
-        {
-            if (stub.buildablezone.buildable_name == level.buildables_available[self.buildables_available_index])
-            {
-                piece = stub.buildablezone.pieces[0];
-                break;
-            }
-        }
+		foreach (stub in level.buildable_stubs)
+		{
+			if (stub.buildablezone.buildable_name == level.buildables_available[self.buildables_available_index])
+			{
+				piece = stub.buildablezone.pieces[0];
+				break;
+			}
+		}
 
-        player maps/mp/zombies/_zm_buildables::player_set_buildable_piece(piece, slot);
+		player maps/mp/zombies/_zm_buildables::player_set_buildable_piece(piece, slot);
 
-        piece = player maps/mp/zombies/_zm_buildables::player_get_buildable_piece(slot);
+		piece = player maps/mp/zombies/_zm_buildables::player_get_buildable_piece(slot);
 
-        if ( !isDefined( piece ) )
-        {
-            if ( isDefined( level.zombie_buildables[ self.equipname ].hint_more ) )
-            {
-                self.hint_string = level.zombie_buildables[ self.equipname ].hint_more;
-            }
-            else
-            {
-                self.hint_string = &"ZOMBIE_BUILD_PIECE_MORE";
-            }
+		if ( !isDefined( piece ) )
+		{
+			if ( isDefined( level.zombie_buildables[ self.equipname ].hint_more ) )
+			{
+				self.hint_string = level.zombie_buildables[ self.equipname ].hint_more;
+			}
+			else
+			{
+				self.hint_string = &"ZOMBIE_BUILD_PIECE_MORE";
+			}
 
-            if ( isDefined( level.custom_buildable_need_part_vo ) )
-            {
-                player thread [[ level.custom_buildable_need_part_vo ]]();
-            }
-            return 0;
-        }
-        else
-        {
-            if ( isDefined( self.bound_to_buildable ) && !self.bound_to_buildable.buildablezone maps/mp/zombies/_zm_buildables::buildable_has_piece( piece ) )
-            {
-                if ( isDefined( level.zombie_buildables[ self.bound_to_buildable.equipname ].hint_wrong ) )
-                {
-                    self.hint_string = level.zombie_buildables[ self.bound_to_buildable.equipname ].hint_wrong;
-                }
-                else
-                {
-                    self.hint_string = &"ZOMBIE_BUILD_PIECE_WRONG";
-                }
+			if ( isDefined( level.custom_buildable_need_part_vo ) )
+			{
+				player thread [[ level.custom_buildable_need_part_vo ]]();
+			}
+			return 0;
+		}
+		else
+		{
+			if ( isDefined( self.bound_to_buildable ) && !self.bound_to_buildable.buildablezone maps/mp/zombies/_zm_buildables::buildable_has_piece( piece ) )
+			{
+				if ( isDefined( level.zombie_buildables[ self.bound_to_buildable.equipname ].hint_wrong ) )
+				{
+					self.hint_string = level.zombie_buildables[ self.bound_to_buildable.equipname ].hint_wrong;
+				}
+				else
+				{
+					self.hint_string = &"ZOMBIE_BUILD_PIECE_WRONG";
+				}
 
-                if ( isDefined( level.custom_buildable_wrong_part_vo ) )
-                {
-                    player thread [[ level.custom_buildable_wrong_part_vo ]]();
-                }
-                return 0;
-            }
-            else
-            {
-                if ( !isDefined( self.bound_to_buildable ) && !self.buildable_pool pooledbuildable_has_piece( piece ) )
-                {
-                    if ( isDefined( level.zombie_buildables[ self.equipname ].hint_wrong ) )
-                    {
-                        self.hint_string = level.zombie_buildables[ self.equipname ].hint_wrong;
-                    }
-                    else
-                    {
-                        self.hint_string = &"ZOMBIE_BUILD_PIECE_WRONG";
-                    }
-                    return 0;
-                }
-                else
-                {
-                    if ( isDefined( self.bound_to_buildable ) )
-                    {
-                        if ( isDefined( level.zombie_buildables[ piece.buildablename ].hint ) )
-                        {
-                            self.hint_string = level.zombie_buildables[ piece.buildablename ].hint;
-                        }
-                        else
-                        {
-                            self.hint_string = "Missing buildable hint";
-                        }
-                    }
-
-                    if ( isDefined( level.zombie_buildables[ piece.buildablename ].hint ) )
-                    {
-                        self.hint_string = level.zombie_buildables[ piece.buildablename ].hint;
-                    }
-                    else
-                    {
-                        self.hint_string = "Missing buildable hint";
-                    }
-                }
-            }
-        }
-    }
-    else
-    {
-        return trigger [[ self.original_prompt_and_visibility_func ]]( player );
-    }
-    return 1;
+				if ( isDefined( level.custom_buildable_wrong_part_vo ) )
+				{
+					player thread [[ level.custom_buildable_wrong_part_vo ]]();
+				}
+				return 0;
+			}
+			else
+			{
+				if ( !isDefined( self.bound_to_buildable ) && !self.buildable_pool pooledbuildable_has_piece( piece ) )
+				{
+					if ( isDefined( level.zombie_buildables[ self.equipname ].hint_wrong ) )
+					{
+						self.hint_string = level.zombie_buildables[ self.equipname ].hint_wrong;
+					}
+					else
+					{
+						self.hint_string = &"ZOMBIE_BUILD_PIECE_WRONG";
+					}
+					return 0;
+				}
+				else
+				{
+					if ( isDefined( self.bound_to_buildable ) )
+					{
+						if ( isDefined( level.zombie_buildables[ piece.buildablename ].hint ) )
+						{
+							self.hint_string = level.zombie_buildables[ piece.buildablename ].hint;
+						}
+						else
+						{
+							self.hint_string = "Missing buildable hint";
+						}
+					}
+					
+					if ( isDefined( level.zombie_buildables[ piece.buildablename ].hint ) )
+					{
+						self.hint_string = level.zombie_buildables[ piece.buildablename ].hint;
+					}
+					else
+					{
+						self.hint_string = "Missing buildable hint";
+					}
+				}
+			}
+		}
+	}
+	else
+	{
+		return trigger [[ self.original_prompt_and_visibility_func ]]( player );
+	}
+	return 1;
 }
 
 pooledbuildable_has_piece( piece )
 {
-    return isDefined( self pooledbuildable_stub_for_piece( piece ) );
+	return isDefined( self pooledbuildable_stub_for_piece( piece ) );
 }
 
 pooledbuildable_stub_for_piece( piece )
 {
-    foreach (stub in self.stubs)
-    {
-        if ( !isDefined( stub.bound_to_buildable ) )
-        {
-            if ( stub.buildablezone maps/mp/zombies/_zm_buildables::buildable_has_piece( piece ) )
-            {
-                return stub;
-            }
-        }
-    }
+	foreach (stub in self.stubs)
+	{
+		if ( !isDefined( stub.bound_to_buildable ) )
+		{
+			if ( stub.buildablezone maps/mp/zombies/_zm_buildables::buildable_has_piece( piece ) )
+			{
+				return stub;
+			}
+		}
+	}
 
-    return undefined;
+	return undefined;
 }
 
 choose_open_buildable( player )
 {
-    self endon( "kill_choose_open_buildable" );
+	self endon( "kill_choose_open_buildable" );
 
-    n_playernum = player getentitynumber();
-    b_got_input = 1;
-    hinttexthudelem = newclienthudelem( player );
-    hinttexthudelem.alignx = "center";
-    hinttexthudelem.aligny = "middle";
-    hinttexthudelem.horzalign = "center";
-    hinttexthudelem.vertalign = "bottom";
-    hinttexthudelem.y = -100;
-    hinttexthudelem.foreground = 1;
-    hinttexthudelem.font = "default";
-    hinttexthudelem.fontscale = 1;
-    hinttexthudelem.alpha = 1;
-    hinttexthudelem.color = ( 1, 1, 1 );
-    hinttexthudelem settext( "Press [{+actionslot 1}] or [{+actionslot 2}] to change item" );
+	n_playernum = player getentitynumber();
+	b_got_input = 1;
+	hinttexthudelem = newclienthudelem( player );
+	hinttexthudelem.alignx = "center";
+	hinttexthudelem.aligny = "middle";
+	hinttexthudelem.horzalign = "center";
+	hinttexthudelem.vertalign = "bottom";
+	hinttexthudelem.y = -100;
+	hinttexthudelem.foreground = 1;
+	hinttexthudelem.font = "default";
+	hinttexthudelem.fontscale = 1;
+	hinttexthudelem.alpha = 1;
+	hinttexthudelem.color = ( 1, 1, 1 );
+	hinttexthudelem settext( "Press [{+actionslot 1}] or [{+actionslot 2}] to change item" );
 
-    if (!isDefined(self.buildables_available_index))
-    {
-        self.buildables_available_index = 0;
-    }
+	if (!isDefined(self.buildables_available_index))
+	{
+		self.buildables_available_index = 0;
+	}
 
-    while ( isDefined( self.playertrigger[ n_playernum ] ) && !self.built )
-    {
-        if (!player isTouching(self.playertrigger[n_playernum]))
-        {
-            hinttexthudelem.alpha = 0;
-            wait 0.05;
-            continue;
-        }
+	while ( isDefined( self.playertrigger[ n_playernum ] ) && !self.built )
+	{
+		if (!player isTouching(self.playertrigger[n_playernum]))
+		{
+			hinttexthudelem.alpha = 0;
+			wait 0.05;
+			continue;
+		}
 
-        hinttexthudelem.alpha = 1;
+		hinttexthudelem.alpha = 1;
 
-        if ( player actionslotonebuttonpressed() )
-        {
-            self.buildables_available_index++;
-            b_got_input = 1;
-        }
-        else
-        {
-            if ( player actionslottwobuttonpressed() )
-            {
-                self.buildables_available_index--;
+		if ( player actionslotonebuttonpressed() )
+		{
+			self.buildables_available_index++;
+			b_got_input = 1;
+		}
+		else
+		{
+			if ( player actionslottwobuttonpressed() )
+			{
+				self.buildables_available_index--;
 
-                b_got_input = 1;
-            }
-        }
+				b_got_input = 1;
+			}
+		}
 
-        if ( self.buildables_available_index >= level.buildables_available.size )
-        {
-            self.buildables_available_index = 0;
-        }
-        else
-        {
-            if ( self.buildables_available_index < 0 )
-            {
-                self.buildables_available_index = level.buildables_available.size - 1;
-            }
-        }
+		if ( self.buildables_available_index >= level.buildables_available.size )
+		{
+			self.buildables_available_index = 0;
+		}
+		else
+		{
+			if ( self.buildables_available_index < 0 )
+			{
+				self.buildables_available_index = level.buildables_available.size - 1;
+			}
+		}
 
-        if ( b_got_input )
-        {
-            piece = undefined;
-            foreach (stub in level.buildable_stubs)
-            {
-                if (stub.buildablezone.buildable_name == level.buildables_available[self.buildables_available_index])
-                {
-                    piece = stub.buildablezone.pieces[0];
-                    break;
-                }
-            }
-            slot = self.buildablestruct.buildable_slot;
-            player maps/mp/zombies/_zm_buildables::player_set_buildable_piece(piece, slot);
+		if ( b_got_input )
+		{
+			piece = undefined;
+			foreach (stub in level.buildable_stubs)
+			{
+				if (stub.buildablezone.buildable_name == level.buildables_available[self.buildables_available_index])
+				{
+					piece = stub.buildablezone.pieces[0];
+					break;
+				}
+			}
+			slot = self.buildablestruct.buildable_slot;
+			player maps/mp/zombies/_zm_buildables::player_set_buildable_piece(piece, slot);
 
-            self.equipname = level.buildables_available[self.buildables_available_index];
-            self.hint_string = level.zombie_buildables[self.equipname].hint;
-            self.playertrigger[n_playernum] sethintstring(self.hint_string);
-            b_got_input = 0;
-        }
+			self.equipname = level.buildables_available[self.buildables_available_index];
+			self.hint_string = level.zombie_buildables[self.equipname].hint;
+			self.playertrigger[n_playernum] sethintstring(self.hint_string);
+			b_got_input = 0;
+		}
 
-        if ( player is_player_looking_at( self.playertrigger[n_playernum].origin, 0.76 ) )
-        {
-            hinttexthudelem.alpha = 1;
-        }
-        else
-        {
-            hinttexthudelem.alpha = 0;
-        }
+		if ( player is_player_looking_at( self.playertrigger[n_playernum].origin, 0.76 ) )
+		{
+			hinttexthudelem.alpha = 1;
+		}
+		else
+		{
+			hinttexthudelem.alpha = 0;
+		}
 
-        wait 0.05;
-    }
+		wait 0.05;
+	}
 
-    hinttexthudelem destroy();
+	hinttexthudelem destroy();
 }
 
 buildablestub_build_succeed()
 {
-    self notify("buildablestub_build_succeed");
-    self endon("buildablestub_build_succeed");
+	self notify("buildablestub_build_succeed");
+	self endon("buildablestub_build_succeed");
 
-    self waittill( "build_succeed" );
+	self waittill( "build_succeed" );
 
-    self.stub maps/mp/zombies/_zm_buildables::buildablestub_remove();
-    arrayremovevalue(level.buildables_available, self.stub.buildablezone.buildable_name);
-    if (level.buildables_available.size == 0)
-    {
-        foreach (stub in level.buildable_stubs)
-        {
-            switch(stub.equipname)
-            {
-            case "turbine":
-            case "subwoofer_zm":
-            case "springpad_zm":
-            case "headchopper_zm":
-                maps/mp/zombies/_zm_unitrigger::unregister_unitrigger(stub);
-                break;
-            }
-        }
-    }
+	self.stub maps/mp/zombies/_zm_buildables::buildablestub_remove();
+	arrayremovevalue(level.buildables_available, self.stub.buildablezone.buildable_name);
+	if (level.buildables_available.size == 0)
+	{
+		foreach (stub in level.buildable_stubs)
+		{
+			switch(stub.equipname)
+			{
+				case "turbine":
+				case "subwoofer_zm":
+				case "springpad_zm":
+				case "headchopper_zm":
+					maps/mp/zombies/_zm_unitrigger::unregister_unitrigger(stub);
+					break;
+			}
+		}
+	}
 }
 
 removebuildable( buildable, after_built )
 {
-    if (!isDefined(after_built))
-    {
-        after_built = 0;
-    }
+	if (!isDefined(after_built))
+	{
+		after_built = 0;
+	}
 
-    if (after_built)
-    {
-        foreach (stub in level._unitriggers.trigger_stubs)
-        {
-            if(IsDefined(stub.equipname) && stub.equipname == buildable)
-            {
-                stub.model hide();
-                maps/mp/zombies/_zm_unitrigger::unregister_unitrigger( stub );
-                return;
-            }
-        }
-    }
-    else
-    {
-        foreach (stub in level.buildable_stubs)
-        {
-            if ( !isDefined( buildable ) || stub.equipname == buildable )
-            {
-                if ( isDefined( buildable ) || stub.persistent != 3 )
-                {
-                    stub maps/mp/zombies/_zm_buildables::buildablestub_remove();
-                    foreach (piece in stub.buildablezone.pieces)
-                    {
-                        piece maps/mp/zombies/_zm_buildables::piece_unspawn();
-                    }
-                    maps/mp/zombies/_zm_unitrigger::unregister_unitrigger( stub );
-                    return;
-                }
-            }
-        }
-    }
+	if (after_built)
+	{
+		foreach (stub in level._unitriggers.trigger_stubs)
+		{
+			if(IsDefined(stub.equipname) && stub.equipname == buildable)
+			{
+				stub.model hide();
+				maps/mp/zombies/_zm_unitrigger::unregister_unitrigger( stub );
+				return;
+			}
+		}
+	}
+	else
+	{
+		foreach (stub in level.buildable_stubs)
+		{
+			if ( !isDefined( buildable ) || stub.equipname == buildable )
+			{
+				if ( isDefined( buildable ) || stub.persistent != 3 )
+				{
+					stub maps/mp/zombies/_zm_buildables::buildablestub_remove();
+					foreach (piece in stub.buildablezone.pieces)
+					{
+						piece maps/mp/zombies/_zm_buildables::piece_unspawn();
+					}
+					maps/mp/zombies/_zm_unitrigger::unregister_unitrigger( stub );
+					return;
+				}
+			}
+		}
+	}
 }
 
 buildable_piece_remove_on_last_stand()
 {
-    self endon( "disconnect" );
+	self endon( "disconnect" );
 
-    self thread buildable_get_last_piece();
+	self thread buildable_get_last_piece();
 
-    while (1)
-    {
-        self waittill("entering_last_stand");
+	while (1)
+	{
+		self waittill("entering_last_stand");
 
-        if (isDefined(self.last_piece))
-        {
-            self.last_piece maps/mp/zombies/_zm_buildables::piece_unspawn();
-        }
-    }
+		if (isDefined(self.last_piece))
+		{
+			self.last_piece maps/mp/zombies/_zm_buildables::piece_unspawn();
+		}
+	}
 }
 
 buildable_get_last_piece()
 {
-    self endon( "disconnect" );
+	self endon( "disconnect" );
 
-    while (1)
-    {
-        if (!self maps/mp/zombies/_zm_laststand::player_is_in_laststand())
-        {
-            self.last_piece = maps/mp/zombies/_zm_buildables::player_get_buildable_piece(0);
-        }
+	while (1)
+	{
+		if (!self maps/mp/zombies/_zm_laststand::player_is_in_laststand())
+		{
+			self.last_piece = maps/mp/zombies/_zm_buildables::player_get_buildable_piece(0);
+		}
 
-        wait 0.05;
-    }
+		wait 0.05;
+	}
 }
 
 // MOTD/Origins style buildables
 buildcraftables()
 {
-    // need a wait or else some buildables dont build
-    wait 1;
+	// need a wait or else some buildables dont build
+	wait 1;
 
-    if(is_classic())
-    {
-        if(level.scr_zm_map_start_location == "prison")
-        {
-            buildcraftable( "alcatraz_shield_zm" );
-            buildcraftable( "packasplat" );
-            changecraftableoption( 0 );
-        }
-        else if(level.scr_zm_map_start_location == "tomb")
-        {
-            buildcraftable( "tomb_shield_zm" );
-            buildcraftable( "equip_dieseldrone_zm" );
-            takecraftableparts( "gramophone" );
-        }
-    }
+	if(is_classic())
+	{
+		if(level.scr_zm_map_start_location == "prison")
+		{
+			buildcraftable( "alcatraz_shield_zm" );
+			buildcraftable( "packasplat" );
+			changecraftableoption( 0 );
+		}
+		else if(level.scr_zm_map_start_location == "tomb")
+		{
+			buildcraftable( "tomb_shield_zm" );
+			buildcraftable( "equip_dieseldrone_zm" );
+			takecraftableparts( "gramophone" );
+		}
+	}
 }
 
 changecraftableoption( index )
 {
-    foreach (craftable in level.a_uts_craftables)
-    {
-        if (craftable.equipname == "open_table")
-        {
-            craftable thread setcraftableoption( index );
-        }
-    }
+	foreach (craftable in level.a_uts_craftables)
+	{
+		if (craftable.equipname == "open_table")
+		{
+			craftable thread setcraftableoption( index );
+		}
+	}
 }
 
 setcraftableoption( index )
 {
-    self endon("death");
+	self endon("death");
 
-    while (self.a_uts_open_craftables_available.size <= 0)
-    {
-        wait 0.05;
-    }
+	while (self.a_uts_open_craftables_available.size <= 0)
+	{
+		wait 0.05;
+	}
 
-    if (self.a_uts_open_craftables_available.size > 1)
-    {
-        self.n_open_craftable_choice = index;
-        self.equipname = self.a_uts_open_craftables_available[self.n_open_craftable_choice].equipname;
-        self.hint_string = self.a_uts_open_craftables_available[self.n_open_craftable_choice].hint_string;
-        foreach (trig in self.playertrigger)
-        {
-            trig sethintstring( self.hint_string );
-        }
-    }
+	if (self.a_uts_open_craftables_available.size > 1)
+	{
+		self.n_open_craftable_choice = index;
+		self.equipname = self.a_uts_open_craftables_available[self.n_open_craftable_choice].equipname;
+		self.hint_string = self.a_uts_open_craftables_available[self.n_open_craftable_choice].hint_string;
+		foreach (trig in self.playertrigger)
+		{
+			trig sethintstring( self.hint_string );
+		}
+	}
 }
 
 takecraftableparts( buildable )
 {
-    player = get_players()[ 0 ];
-    foreach (stub in level.zombie_include_craftables)
-    {
-        if ( stub.name == buildable )
-        {
-            foreach (piece in stub.a_piecestubs)
-            {
-                piecespawn = piece.piecespawn;
-                if ( isDefined( piecespawn ) )
-                {
-                    player player_take_piece( piecespawn );
-                }
-            }
+	player = get_players()[ 0 ];
+	foreach (stub in level.zombie_include_craftables)
+	{
+		if ( stub.name == buildable )
+		{
+			foreach (piece in stub.a_piecestubs)
+			{
+				piecespawn = piece.piecespawn;
+				if ( isDefined( piecespawn ) )
+				{
+					player player_take_piece( piecespawn );
+				}
+			}
 
-            return;
-        }
-    }
+			return;
+		}
+	}
 }
 
 buildcraftable( buildable )
 {
-    player = get_players()[ 0 ];
-    foreach (stub in level.a_uts_craftables)
-    {
-        if ( stub.craftablestub.name == buildable )
-        {
-            foreach (piece in stub.craftablespawn.a_piecespawns)
-            {
-                piecespawn = get_craftable_piece( stub.craftablestub.name, piece.piecename );
-                if ( isDefined( piecespawn ) )
-                {
-                    player player_take_piece( piecespawn );
-                }
-            }
+	player = get_players()[ 0 ];
+	foreach (stub in level.a_uts_craftables)
+	{
+		if ( stub.craftablestub.name == buildable )
+		{
+			foreach (piece in stub.craftablespawn.a_piecespawns)
+			{
+				piecespawn = get_craftable_piece( stub.craftablestub.name, piece.piecename );
+				if ( isDefined( piecespawn ) )
+				{
+					player player_take_piece( piecespawn );
+				}
+			}
 
-            return;
-        }
-    }
+			return;
+		}
+	}
 }
 
 get_craftable_piece( str_craftable, str_piece )
 {
-    foreach (uts_craftable in level.a_uts_craftables)
-    {
-        if ( uts_craftable.craftablestub.name == str_craftable )
-        {
-            foreach (piecespawn in uts_craftable.craftablespawn.a_piecespawns)
-            {
-                if ( piecespawn.piecename == str_piece )
-                {
-                    return piecespawn;
-                }
-            }
-        }
-    }
-    return undefined;
+	foreach (uts_craftable in level.a_uts_craftables)
+	{
+		if ( uts_craftable.craftablestub.name == str_craftable )
+		{
+			foreach (piecespawn in uts_craftable.craftablespawn.a_piecespawns)
+			{
+				if ( piecespawn.piecename == str_piece )
+				{
+					return piecespawn;
+				}
+			}
+		}
+	}
+	return undefined;
 }
 
 player_take_piece( piecespawn )
 {
-    piecestub = piecespawn.piecestub;
-    damage = piecespawn.damage;
+	piecestub = piecespawn.piecestub;
+	damage = piecespawn.damage;
 
-    if ( isDefined( piecestub.onpickup ) )
-    {
-        piecespawn [[ piecestub.onpickup ]]( self );
-    }
+	if ( isDefined( piecestub.onpickup ) )
+	{
+		piecespawn [[ piecestub.onpickup ]]( self );
+	}
 
-    if ( isDefined( piecestub.is_shared ) && piecestub.is_shared )
-    {
-        if ( isDefined( piecestub.client_field_id ) )
-        {
-            level setclientfield( piecestub.client_field_id, 1 );
-        }
-    }
-    else
-    {
-        if ( isDefined( piecestub.client_field_state ) )
-        {
-            self setclientfieldtoplayer( "craftable", piecestub.client_field_state );
-        }
-    }
+	if ( isDefined( piecestub.is_shared ) && piecestub.is_shared )
+	{
+		if ( isDefined( piecestub.client_field_id ) )
+		{
+			level setclientfield( piecestub.client_field_id, 1 );
+		}
+	}
+	else
+	{
+		if ( isDefined( piecestub.client_field_state ) )
+		{
+			self setclientfieldtoplayer( "craftable", piecestub.client_field_state );
+		}
+	}
 
-    piecespawn piece_unspawn();
-    piecespawn notify( "pickup" );
+	piecespawn piece_unspawn();
+	piecespawn notify( "pickup" );
 
-    if ( isDefined( piecestub.is_shared ) && piecestub.is_shared )
-    {
-        piecespawn.in_shared_inventory = 1;
-    }
+	if ( isDefined( piecestub.is_shared ) && piecestub.is_shared )
+	{
+		piecespawn.in_shared_inventory = 1;
+	}
 
-    self adddstat( "buildables", piecespawn.craftablename, "pieces_pickedup", 1 );
+	self adddstat( "buildables", piecespawn.craftablename, "pieces_pickedup", 1 );
 }
 
 piece_unspawn()
 {
-    if ( isDefined( self.model ) )
-    {
-        self.model delete();
-    }
-    self.model = undefined;
-    if ( isDefined( self.unitrigger ) )
-    {
-        thread maps/mp/zombies/_zm_unitrigger::unregister_unitrigger( self.unitrigger );
-    }
-    self.unitrigger = undefined;
+	if ( isDefined( self.model ) )
+	{
+		self.model delete();
+	}
+	self.model = undefined;
+	if ( isDefined( self.unitrigger ) )
+	{
+		thread maps/mp/zombies/_zm_unitrigger::unregister_unitrigger( self.unitrigger );
+	}
+	self.unitrigger = undefined;
 }
 
 remove_buildable_pieces( buildable_name )
 {
-    foreach (buildable in level.zombie_include_buildables)
-    {
-        if(IsDefined(buildable.name) && buildable.name == buildable_name)
-        {
-            pieces = buildable.buildablepieces;
-            for(i = 0; i < pieces.size; i++)
-            {
-                pieces[i] maps/mp/zombies/_zm_buildables::piece_unspawn();
-            }
-            return;
-        }
-    }
+	foreach (buildable in level.zombie_include_buildables)
+	{
+		if(IsDefined(buildable.name) && buildable.name == buildable_name)
+		{
+			pieces = buildable.buildablepieces;
+			for(i = 0; i < pieces.size; i++)
+			{
+				pieces[i] maps/mp/zombies/_zm_buildables::piece_unspawn();
+			}
+			return;
+		}
+	}
 }
 
 show_powerswitch()
 {
-    getent( "powerswitch_p6_zm_buildable_pswitch_hand", "targetname" ) show();
-    getent( "powerswitch_p6_zm_buildable_pswitch_body", "targetname" ) show();
-    getent( "powerswitch_p6_zm_buildable_pswitch_lever", "targetname" ) show();
+	getent( "powerswitch_p6_zm_buildable_pswitch_hand", "targetname" ) show();
+	getent( "powerswitch_p6_zm_buildable_pswitch_body", "targetname" ) show();
+	getent( "powerswitch_p6_zm_buildable_pswitch_lever", "targetname" ) show();
 }
 
 // QOL stuff :D
 spawn_on_join()
 {
-    level endon("end_game");
-    self endon("disconnect");
-    wait 5;
-    if (self.sessionstate == "spectator")
-    {
-        self [[level.spawnplayer]]();
-        thread maps\mp\zombies\_zm::refresh_player_navcard_hud();
-    }
+	level endon("end_game");
+	self endon("disconnect");
+	wait 5;
+	if (self.sessionstate == "spectator")
+	{
+		self [[level.spawnplayer]]();
+		thread maps\mp\zombies\_zm::refresh_player_navcard_hud();
+	}
 }
 
 // checks lethal, tactical, and placeable (like claymore)
